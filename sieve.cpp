@@ -13,7 +13,7 @@ static inline bool     check_rbit              (const sieve* s, llu_t idx);
 static inline void     set_lbit                (sieve* s, llu_t idx);
 static inline void     set_rbit                (sieve* s, llu_t idx);
 static inline lli_t    pow_mod                 (llu_t base, llu_t pow, llu_t mod);
-static inline unsigned mr_get_a                (unsigned** a, llu_t number);
+static inline bool     mr_witness              (llu_t number, llu_t s, llu_t d, unsigned a);
 
 static inline sieve*  allocate_mem_for_sieve  (llu_t sieve_size)
 {
@@ -157,134 +157,48 @@ bool is_prime_mr (llu_t number)
     for (; d % 2 == 0; s++)
         d /= 2;
 
-    unsigned* a;
-    unsigned a_size = mr_get_a (&a, number);
-    for (unsigned i = 0; a[i] < number && i < a_size; i++)
-    {
-        if (pow_mod (a[i], d, number) != 1)
-        {
-            llu_t r = 0;
-            for (; r < s; r++)
-                if (pow_mod (a[i], (llu_t) pow (2, r) * d, number) == number - 1)
-                    break;
-
-            if (r == s)
-                return false;
-        }
-    }
-
-    free (a);
-
-    return true;
-
+    #define W( a )              mr_witness (number, s, d, a)
+    if (number < 2047)
+        return W (2);
+    else if (number < 1373653)
+        return W (2) && W (3);
+    else if (number < 9080191)
+        return W (31) && W (73);
+    else if (number < 25326001)
+        return W (2) && W (3) && W (5);
+    else if (number < 3215031751)
+        return W (2) && W (3) && W (5) && W (7);
+    else if (number < 4759123141)
+        return W (2) && W (7) && W (61);
+    else if (number < 1122004669633)
+        return W (2) && W (13) && W (23) && W (1662803);
+    else if (number < 2152302898747)
+        return W (2) && W (3) && W (5) && W (7) && W (11);
+    else if (number < 3474749660383)
+        return W (2) && W (3) && W (5) && W (7) && W (11) && W (13);
+    else if (number < 341550071728321)
+        return W (2) && W (3) && W (5) && W (7) && W (11) && W (13) && W (17);
+    else if (number < 3825123056546413051)
+        return W (2) && W (3) && W (5) && W (7) && W (11) && W (13) && W (17) && W (19) && W (23);
+    else
+        return W (2) && W (3) && W (5) && W (7) && W (11) && W (13) && W (17) && W (19) && W (23) && W (29) && W (31) && W (37); 
+    #undef W
 }
 
-static inline unsigned mr_get_a (unsigned** a, llu_t number)
+static inline bool mr_witness (llu_t number, llu_t s, llu_t d, unsigned a)
 {
-    assert (a);
+    if (pow_mod (a, d, number) != 1)
+    {
+        llu_t r = 0;
+        for (; r < s; r++)
+            if (pow_mod (a, (llu_t) pow (2, r) * d, number) == number - 1)
+                break;
 
-    #define u unsigned
-    u a1[]  = {2};
-    u a2[]  = {2, 3};
-    u a3[]  = {31, 73};
-    u a4[]  = {2, 3, 5};
-    u a5[]  = {2, 3, 5, 7};
-    u a6[]  = {2, 7, 61};
-    u a7[]  = {2, 13, 23, 1662803};
-    u a8[]  = {2, 3, 5, 7, 11};
-    u a9[]  = {2, 3, 5, 7, 11, 13};
-    u a10[] = {2, 3, 5, 7, 11, 13, 17};
-    u a11[] = {2, 3, 5, 7, 11, 13, 17, 19, 23};
-    u a12[] = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
+        if (r == s)
+            return false;
+    } 
 
-    unsigned size = 0;
-    if (number < 2047)
-    {
-        size = sizeof (a1) / sizeof (u);
-        *a = (unsigned*) calloc (size, sizeof (unsigned));
-        assert (*a);
-        memcpy (*a, a1, sizeof (a1));
-    }
-    else if (number < 1373653)
-    {
-        size = sizeof (a2) / sizeof (u);
-        *a = (unsigned*) calloc (size, sizeof (unsigned));
-        assert (*a);
-        memcpy (*a, a2, sizeof (a2));
-    }
-    else if (number < 9080191)
-    {
-        size = sizeof (a3) / sizeof (u);
-        *a = (unsigned*) calloc (size, sizeof (unsigned));
-        assert (*a);
-        memcpy (*a, a3, sizeof (a3));
-    }
-    else if (number < 25326001)
-    {
-        size = sizeof (a4) / sizeof (u);
-        *a = (unsigned*) calloc (size, sizeof (unsigned));
-        assert (*a);
-        memcpy (*a, a4, sizeof (a4));
-    }
-    else if (number < 3215031751)
-    {
-        size = sizeof (a5) / sizeof (u);
-        *a = (unsigned*) calloc (size, sizeof (unsigned));
-        assert (*a);
-        memcpy (*a, a5, sizeof (a5));
-    }
-    else if (number < 4759123141)
-    {
-        size = sizeof (a6) / sizeof (u);
-        *a = (unsigned*) calloc (size, sizeof (unsigned));
-        assert (*a);
-        memcpy (*a, a6, sizeof (a6));
-    }
-    else if (number < 1122004669633)
-    {
-        size = sizeof (a7) / sizeof (u);
-        *a = (unsigned*) calloc (size, sizeof (unsigned));
-        assert (*a);
-        memcpy (*a, a7, sizeof (a7));
-    }
-    else if (number < 2152302898747)
-    {
-        size = sizeof (a8) / sizeof (u);
-        *a = (unsigned*) calloc (size, sizeof (unsigned));
-        assert (*a);
-        memcpy (*a, a8, sizeof (a8));
-    }
-    else if (number < 3474749660383)
-    {
-        size = sizeof (a9) / sizeof (u);
-        *a = (unsigned*) calloc (size, sizeof (unsigned));
-        assert (*a);
-        memcpy (*a, a9, sizeof (a9));
-    }
-    else if (number < 341550071728321)
-    {
-        size = sizeof (a10) / sizeof (u);
-        *a = (unsigned*) calloc (size, sizeof (unsigned));
-        assert (*a);
-        memcpy (*a, a10, sizeof (a10));
-    }
-    else if (number < 3825123056546413051)
-    {
-        size = sizeof (a11) / sizeof (u);
-        *a = (unsigned*) calloc (size, sizeof (unsigned));
-        assert (*a);
-        memcpy (*a, a11, sizeof (a11));
-    }
-    else
-    {
-        size = sizeof (a12) / sizeof (u);
-        *a = (unsigned*) calloc (size, sizeof (unsigned));
-        assert (*a);
-        memcpy (*a, a12, sizeof (a12));
-    }
-    #undef u
-
-    return size;
+    return true;
 }
 
 static inline lli_t pow_mod (llu_t base, llu_t pow, llu_t mod)

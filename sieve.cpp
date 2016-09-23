@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 
 
 static inline sieve*   allocate_mem_for_sieve  (llu_t sieve_size);
@@ -203,6 +204,7 @@ static inline bool mr_witness (llu_t number, llu_t s, llu_t d, unsigned a)
 
 static inline lli_t pow_mod (llu_t base, llu_t pow, llu_t mod)
 {
+    const static llu_t max_base = (llu_t) sqrt (ULLONG_MAX);
     llu_t tmp = 1;
 
     while (pow) 
@@ -210,12 +212,28 @@ static inline lli_t pow_mod (llu_t base, llu_t pow, llu_t mod)
         if (pow % 2 == 0) 
         {
             pow /= 2;
-            base = (base * base) % mod;
+            if (base < max_base)
+                base = (base * base) % mod;
+            else if (base % mod < max_base)
+                base = ((base % mod) * (base % mod)) % mod;
+            else
+            {
+                printf ("\n\nERROR\tbase %% mod < max_base\n\n");
+                abort ();
+            }
         }
         else 
         {
-            pow--;;
-            tmp = (tmp * base) % mod;
+            pow--;
+            if (base < max_base && tmp < max_base)
+                tmp = (tmp * base) % mod;
+            else if (base % mod < max_base && tmp % mod < max_base)
+                tmp = ((tmp % mod) * (base % mod)) % mod;
+            else
+            {
+                printf ("\n\nERROR\tbase %% mod < max_base && tmp %% mod < max_base\n\n");
+                abort ();
+            }
         }
     }
     return tmp;

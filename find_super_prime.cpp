@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <cmath>
+#include <new>
 #include "sieve.h"
 
 typedef unsigned char digit_t;
@@ -25,7 +26,9 @@ unsigned find (unsigned n)
 
     while (n > 3)
     {
-        digit_t* digits = new digit_t[n];
+        digit_t* digits = new (std::nothrow) digit_t[n];
+        assert (digits);
+        
         unsigned digits_sum = 0;
         for (unsigned i = 0; i < n; i++)
         {

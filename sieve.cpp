@@ -1,5 +1,4 @@
 #include "sieve.h"
-#include <malloc.h>
 #include <assert.h>
 #include <limits.h>
 #include <math.h>
@@ -15,10 +14,11 @@ static inline void     set_lbit                (sieve* s, llu_t idx);
 static inline void     set_rbit                (sieve* s, llu_t idx);
 static inline lli_t    pow_mod                 (llu_t base, llu_t pow, llu_t mod);
 static inline bool     mr_witness              (llu_t number, llu_t s, llu_t d, unsigned a);
+static inline llu_t    mul_mod                 (llu_t a, llu_t b, llu_t mod);
 
 static inline sieve*  allocate_mem_for_sieve  (llu_t sieve_size)
 {
-    sieve* s = (sieve*) calloc (1, sizeof (sieve));
+    sieve* s = new sieve;
     assert (s);
 
     if (sieve_size % 6 == 1)
@@ -33,8 +33,8 @@ static inline sieve*  allocate_mem_for_sieve  (llu_t sieve_size)
     else
         s->size_ = s->size_ / CHAR_BIT;
 
-    s->left_  = (unsigned char*) calloc (s->size_, sizeof (unsigned char));
-    s->right_ = (unsigned char*) calloc (s->size_, sizeof (unsigned char));
+    s->left_  = new unsigned char[s->size_];
+    s->right_  = new unsigned char[s->size_];
     assert (s->left_);
     assert (s->right_);
 
@@ -217,10 +217,7 @@ static inline lli_t pow_mod (llu_t base, llu_t pow, llu_t mod)
             else if (base % mod < max_base)
                 base = ((base % mod) * (base % mod)) % mod;
             else
-            {
-                printf ("\n\nERROR\tbase %% mod < max_base\n\n");
-                abort ();
-            }
+                base = mul_mod (base, base, mod);
         }
         else 
         {
@@ -230,24 +227,67 @@ static inline lli_t pow_mod (llu_t base, llu_t pow, llu_t mod)
             else if (base % mod < max_base && tmp % mod < max_base)
                 tmp = ((tmp % mod) * (base % mod)) % mod;
             else
-            {
-                printf ("\n\nERROR\tbase %% mod < max_base && tmp %% mod < max_base\n\n");
-                abort ();
-            }
+                tmp = mul_mod (tmp, base, mod);
         }
     }
     return tmp;
 }
 
+static inline llu_t mul_mod (llu_t a, llu_t b, llu_t mod)
+{
+    unsigned size = 0;
+    for (llu_t i = ULLONG_MAX; i > 0; i /= 10)
+        size++;
+
+    unsigned char* number = new unsigned char[size * 2];
+    assert (number);
+    for (unsigned i = 0; i < size * 2; i++)
+        number[i] = 0;
+
+    for (unsigned i = 0; b > 0; i++)
+    {
+        unsigned char n1 = b % 10;
+        b /= 10;
+        llu_t n2 = a;
+
+        for (unsigned j = 0; n2 > 0; j++)
+        {
+            number[j + i] += n1 * (n2 % 10);
+            n2 /= 10;
+            if (number[j + i] >= 10)
+            {
+                number[j + i + 1] += number[j + i] / 10;
+                number[j + i] %= 10;
+            }
+        }
+    }
+
+
+    unsigned begin = 0;
+    for (unsigned i = size * 2 - 1; number[i] == 0; i--)
+        begin = i;
+    llu_t res = 0;
+    llu_t tmp = 0;
+    for (unsigned i = begin;; i--)
+    {
+        tmp *= 10;
+        tmp += number[i];
+        tmp %= mod;
+        res = tmp;
+
+        if (i == 0)
+            break;
+    }
+
+    delete[] number;
+    return res;
+}
+
 void free_sieve (sieve* s)
 {
-    assert (s);
-    assert (s->left_);
-    assert (s->right_);
-
-    free (s->left_);
-    free (s->right_);
-    free (s);
+    delete[] s->left_;
+    delete[] s->right_;
+    delete s;
 }
 
 static inline bool check_lbit (const sieve* s, llu_t idx)

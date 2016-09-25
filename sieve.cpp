@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <math.h>
+#include <new>
 #include <string.h>
 #include <stdlib.h>
 
@@ -12,13 +13,13 @@ static inline bool     check_lbit              (const sieve* s, llu_t idx);
 static inline bool     check_rbit              (const sieve* s, llu_t idx);
 static inline void     set_lbit                (sieve* s, llu_t idx);
 static inline void     set_rbit                (sieve* s, llu_t idx);
-static inline lli_t    pow_mod                 (llu_t base, llu_t pow, llu_t mod);
+static inline llu_t    pow_mod                 (llu_t base, llu_t pow, llu_t mod);
 static inline bool     mr_witness              (llu_t number, llu_t s, llu_t d, unsigned a);
 static inline llu_t    mul_mod                 (llu_t a, llu_t b, llu_t mod);
 
 static inline sieve*  allocate_mem_for_sieve  (llu_t sieve_size)
 {
-    sieve* s = new sieve;
+    sieve* s = new (std::nothrow) sieve;
     assert (s);
 
     if (sieve_size % 6 == 1)
@@ -33,8 +34,8 @@ static inline sieve*  allocate_mem_for_sieve  (llu_t sieve_size)
     else
         s->size_ = s->size_ / CHAR_BIT;
 
-    s->left_  = new unsigned char[s->size_];
-    s->right_  = new unsigned char[s->size_];
+    s->left_  = new (std::nothrow) unsigned char[s->size_];
+    s->right_  = new (std::nothrow) unsigned char[s->size_];
     assert (s->left_);
     assert (s->right_);
 
@@ -202,7 +203,7 @@ static inline bool mr_witness (llu_t number, llu_t s, llu_t d, unsigned a)
     return true;
 }
 
-static inline lli_t pow_mod (llu_t base, llu_t pow, llu_t mod)
+static inline llu_t pow_mod (llu_t base, llu_t pow, llu_t mod)
 {
     const static llu_t max_base = (llu_t) sqrt (ULLONG_MAX);
     llu_t tmp = 1;
@@ -239,7 +240,7 @@ static inline llu_t mul_mod (llu_t a, llu_t b, llu_t mod)
     for (llu_t i = ULLONG_MAX; i > 0; i /= 10)
         size++;
 
-    unsigned char* number = new unsigned char[size * 2];
+    unsigned char* number = new (std::nothrow) unsigned char[size * 2];
     assert (number);
     for (unsigned i = 0; i < size * 2; i++)
         number[i] = 0;

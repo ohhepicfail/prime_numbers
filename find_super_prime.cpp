@@ -25,7 +25,7 @@ unsigned find (unsigned n)
 
     while (n > 3)
     {
-        digit_t digits[n];
+        digit_t* digits = new digit_t[n];
         unsigned digits_sum = 0;
         for (unsigned i = 0; i < n; i++)
         {
@@ -49,6 +49,7 @@ unsigned find (unsigned n)
         }
 
         n--;
+        delete[] digits;
     }
 
     return 0;

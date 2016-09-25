@@ -1,4 +1,4 @@
-CFLAGS=-c -Wall -Wextra -O3 -std=c++14 
+CFLAGS=-c -Wall -Wextra -Wpedantic -std=c++14 
 
 all: nprime find_super_prime mr
 

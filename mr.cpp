@@ -3,15 +3,10 @@
 
 int main ()
 {
-	llu_t number = 1000000000;
+	llu_t n = 15485863989898931;
 
-	for (llu_t n = 0; n < number; n++)
-	{
-		if (is_prime (NULL, n) != is_prime_mr (n))
-			printf ("\n---!!!---fail---!!!--- --%llu\t%d\t%d\n", n, is_prime (NULL, n), is_prime_mr (n));
-		if (n % 1000000 == 0)
-			printf ("-%llu-", n);
-	}
+	printf ("mr     - %d\n", is_prime_mr (n));
+	printf ("simple - %d\n", is_prime (NULL, n));
 
 	return 0;
 }
